@@ -19,9 +19,11 @@ function envNumberOrThrow(key : string) : number{
 }
 
 type Config = {
-    port : number
+    port : number,
+    dbUrl : string
 }
 
 export const config : Config = {
-    port : envNumberOrThrow('PORT')
+    port : envNumberOrThrow('PORT'),
+    dbUrl : envStringOrThrow('DATABASE_URL')
 }
