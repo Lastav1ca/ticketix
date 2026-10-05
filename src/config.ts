@@ -20,10 +20,14 @@ function envNumberOrThrow(key : string) : number{
 
 type Config = {
     port : number,
-    dbUrl : string
+    dbUrl : string,
+    jwtSecret : string,
+    jwtSecretExpiresIn : string
 }
 
 export const config : Config = {
     port : envNumberOrThrow('PORT'),
-    dbUrl : envStringOrThrow('DATABASE_URL')
+    dbUrl : envStringOrThrow('DATABASE_URL'),
+    jwtSecret : envStringOrThrow('JWT_SECRET'),
+    jwtSecretExpiresIn : envStringOrThrow('JWT_SECRET_EXPIRES_IN')
 }
