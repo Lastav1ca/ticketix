@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken"
 
 try{
     process.loadEnvFile(".env")
@@ -22,12 +23,12 @@ type Config = {
     port : number,
     dbUrl : string,
     jwtSecret : string,
-    jwtSecretExpiresIn : string
+    jwtSecretExpiresIn : jwt.SignOptions["expiresIn"]
 }
 
 export const config : Config = {
     port : envNumberOrThrow('PORT'),
     dbUrl : envStringOrThrow('DATABASE_URL'),
     jwtSecret : envStringOrThrow('JWT_SECRET'),
-    jwtSecretExpiresIn : envStringOrThrow('JWT_SECRET_EXPIRES_IN')
+    jwtSecretExpiresIn : envStringOrThrow('JWT_SECRET_EXPIRES_IN') as jwt.SignOptions["expiresIn"]
 }

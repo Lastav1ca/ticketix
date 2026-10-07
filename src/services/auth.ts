@@ -1,7 +1,11 @@
 import argon2 from "argon2"
-import { insertUser } from "../db/queries/users.js";
+import jwt from "jsonwebtoken"
+import { getUserByEmail, insertUser } from "../db/queries/users.js";
 import { DatabaseError } from "pg";
-import { ConflictError } from "../errors.js";
+import { ConflictError, UnauthorizedError } from "../errors.js";
+import { config } from "../config.js";
+
+
 
 
 export async function registerUser(name : string, email : string, password : string){
@@ -15,6 +19,20 @@ export async function registerUser(name : string, email : string, password : str
         }
         throw err
     }
-    
+}
 
+export async function loginUser(email : string, password : string){
+    const user = await getUserByEmail(email)
+    if (!user) { throw new UnauthorizedError('invalid email/password combination') }
+
+    if (await argon2.verify(user.passwordHash, password)){
+        const token = jwt.sign(
+            {sub : user.id, role : user.role},
+            config.jwtSecret,
+            {expiresIn : config.jwtSecretExpiresIn}
+        )
+        return {token}
+    }else{
+        throw new UnauthorizedError('invalid email/password combination')
+    }
 }
