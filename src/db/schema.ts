@@ -1,8 +1,11 @@
 import { pgTable, timestamp, uuid, text, pgEnum } from "drizzle-orm/pg-core";
 
 export const roleEnum = pgEnum("user_role", ["client", "agent", "admin"]);
+export type Role = typeof roleEnum.enumValues[number]
 export const ticketPriorityEnum = pgEnum("ticket_priority", ["low", "medium", "high", "urgent"])
+export type TicketPriority = typeof ticketPriorityEnum.enumValues[number]
 export const ticketStatusEnum = pgEnum("ticket_status", ['open', 'in_progress', 'resolved', 'closed'])
+export type TicketStatus = typeof ticketStatusEnum.enumValues[number]
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom().notNull(),
