@@ -1,8 +1,8 @@
 import { pgTable, timestamp, uuid, text, pgEnum } from "drizzle-orm/pg-core";
 
 export const roleEnum = pgEnum("user_role", ["client", "agent", "admin"]);
-export const ticketPriority = pgEnum("ticket_priority", ["low", "medium", "high", "urgent"])
-export const ticketStatus = pgEnum("ticket_status", ['open', 'in_progress', 'resolved', 'closed'])
+export const ticketPriorityEnum = pgEnum("ticket_priority", ["low", "medium", "high", "urgent"])
+export const ticketStatusEnum = pgEnum("ticket_status", ['open', 'in_progress', 'resolved', 'closed'])
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom().notNull(),
@@ -21,8 +21,8 @@ export const tickets = pgTable("tickets", {
   id : uuid("id").primaryKey().notNull().defaultRandom(),
   title : text("title").notNull(),
   description : text("description").notNull(),
-  status : ticketStatus("status").notNull().default("open"),
-  priority : ticketPriority("priority").notNull().default("medium"),
+  status : ticketStatusEnum("status").notNull().default("open"),
+  priority : ticketPriorityEnum("priority").notNull().default("medium"),
   createdBy : uuid("created_by").notNull().references(() => users.id),
   assignedTo : uuid("assigned_to").references(() => users.id, {onDelete : "set null"}), // can be null while ticket isnt assigned
   createdAt : timestamp("created_at", {withTimezone : true}).notNull().defaultNow(),
