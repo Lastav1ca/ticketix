@@ -19,17 +19,17 @@ export async function insertTicket(title : string, description : string, created
     return result;
 }
 
-export async function getTicketById(id : string){
+export async function selectTicketById(id : string){
     const [result] = await db.select(ticketColumns).from(tickets).where(eq(tickets.id, id))
     return result
 }
 
-export async function getAllTicketsByUser (userId : string){
+export async function selectAllTicketsByUser (userId : string){
     const result = await db.select(ticketColumns).from(tickets).where(eq(tickets.createdBy, userId)).orderBy(desc(tickets.createdAt))
     return result
 }
 
-export async function getAllTickets (){
+export async function selectAllTickets (){
     const result = await db.select(ticketColumns).from(tickets).orderBy(desc(tickets.createdAt))
     return result
 }
