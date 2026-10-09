@@ -1,8 +1,9 @@
 import { Router, Request, Response } from "express";
-import { listTickets, createTicket, getTicketById } from "../services/tickets.js";
+import { listTickets, createTicket, getTicketById, changeTicketStatus } from "../services/tickets.js";
 import { requireAuth } from "../middleware/auth.js";
-import { ticketSchema } from "../schemas/tickets.js";
+import { ticketIdSchema, ticketSchema, updateStatusSchema } from "../schemas/tickets.js";
 import {z} from "zod"
+import { ticketStatusEnum } from "../db/schema.js";
 
 export const ticketsRouter = Router();
 
@@ -34,4 +35,20 @@ ticketsRouter.get('/:id', async (req : Request, res : Response) => {
     const ticket = await getTicketById(parsed.data, req.user.id, req.user.role)
 
     res.status(200).json(ticket)
+})
+
+ticketsRouter.patch('/:id/status', async (req : Request, res : Response) => {
+
+    if (!req.user) {return res.status(401).json({error : 'Unauthorized!'})}
+
+    const parsedId = ticketIdSchema.safeParse(req.params.id)
+    const parsedBody = updateStatusSchema.safeParse(req.body)
+
+    if (!parsedId.success) { return res.status(400).json({error : 'Invalid ticket id'})}
+    if (!parsedBody.success) { return res.status(400).json({error : 'Invalid status'})}
+
+    const ticket = await changeTicketStatus(parsedId.data, parsedBody.data.status, req.user.role)
+
+    res.status(200).json(ticket)
+
 })

@@ -1,5 +1,5 @@
 import { db } from "../index.js"
-import { tickets } from "../schema.js"
+import { tickets, TicketStatus } from "../schema.js"
 import { desc, eq } from "drizzle-orm"
 
 const ticketColumns = {
@@ -31,5 +31,10 @@ export async function selectAllTicketsByUser (userId : string){
 
 export async function selectAllTickets (){
     const result = await db.select(ticketColumns).from(tickets).orderBy(desc(tickets.createdAt))
+    return result
+}
+
+export async function updateTicketStatus(id : string, status : TicketStatus){
+    const [result] = await db.update(tickets).set({status}).where(eq(tickets.id, id)).returning(ticketColumns)
     return result
 }

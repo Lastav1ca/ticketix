@@ -1,6 +1,13 @@
-import { selectAllTicketsByUser, selectAllTickets, insertTicket, selectTicketById } from "../db/queries/tickets.js";
-import type { Role } from "../db/schema.js";
-import { NotFoundError} from "../errors.js";
+import { selectAllTicketsByUser, selectAllTickets, insertTicket, selectTicketById, updateTicketStatus } from "../db/queries/tickets.js";
+import type { Role, TicketStatus } from "../db/schema.js";
+import { ConflictError, ForbiddenError, NotFoundError} from "../errors.js";
+
+const allowed: Record<TicketStatus, TicketStatus[]> = {
+    open:        ["in_progress", "closed"],
+    in_progress: ["resolved", "closed"],
+    resolved:    ["closed", "in_progress"],
+    closed:      [],
+    }
 
 export async function listTickets(userId : string, role : Role){
 
@@ -32,5 +39,20 @@ export async function getTicketById(ticketId : string, userId : string, role : R
     ) { throw new NotFoundError('ticket not found')}
 
     return ticket
+
+}
+
+export async function changeTicketStatus(ticketId : string, status : TicketStatus, role : Role){
+
+    if (role !== 'admin' && role !== 'agent') { throw new ForbiddenError('only agents can change ticket status')}
+    
+    const ticket = await selectTicketById(ticketId)
+    if (!ticket) { throw new NotFoundError('ticket not found')}
+
+    if (!allowed[ticket.status].includes(status)) { throw new ConflictError(`cannot change status from ${ticket.status} to ${status}`)}
+
+    const updatedTicket = await updateTicketStatus(ticketId, status)
+
+    return updatedTicket
 
 }
