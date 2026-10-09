@@ -25,3 +25,29 @@ Content-Type: application/json
 ### lista tiketa (agent — sve) — 200
 GET {{host}}/api/tickets
 Authorization: Bearer {{agentLogin.response.body.token}}
+
+### uploaduj tiket - 201
+POST {{host}}/api/tickets
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{"title" : "New Ticket", "description" : "Need help with my pc"}
+
+
+### uploaduj tiket (bez tokena) - 401
+POST {{host}}/api/tickets
+Content-Type: application/json
+
+{"title" : "New Ticket", "description" : "Need help with my pc"}
+
+### uploaduj prazno telo — 400
+POST {{host}}/api/tickets
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+### uploaduj tiket sa status i createdBy — 201, ali ignorisano (status ostaje "open" po defaultu - createdBy je id korisnika)
+POST {{host}}/api/tickets
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{"title":"Hakerski tiket","description":"Probam mass assignment","status":"resolved","createdBy":"00000000-0000-0000-0000-000000000000"}

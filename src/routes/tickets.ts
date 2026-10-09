@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
-import { listTickets } from "../services/tickets.js";
+import { listTickets, createTicket } from "../services/tickets.js";
 import { requireAuth } from "../middleware/auth.js";
+import { ticketSchema } from "../schemas/tickets.js";
 
 export const ticketsRouter = Router();
 
@@ -11,4 +12,14 @@ ticketsRouter.get('/', async (req : Request, res : Response) => {
     const tickets = await listTickets(req.user.id, req.user.role)
 
     return res.status(200).json(tickets)
+})
+
+ticketsRouter.post('/', async (req : Request, res : Response) => {
+    if (!req.user) {return res.status(401).json({error : 'Unauthorized!'})}
+    
+    const result = ticketSchema.safeParse(req.body)
+    if (!result.success) { return res.status(400).json({"error" : "validation failed", "issues" : result.error.issues})}
+
+    const ticket = await createTicket(result.data.title, result.data.description, req.user.id)
+    res.status(201).json(ticket)
 })
