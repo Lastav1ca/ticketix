@@ -1,0 +1,27 @@
+@host = http://localhost:3000
+
+### login kao klijent
+# @name clientLogin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"marko@test.rs","password":"tajnalozinka"}
+
+### lista tiketa (klijent — samo svoje) — 200
+GET {{host}}/api/tickets
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+### lista bez tokena — 401
+GET {{host}}/api/tickets
+
+### login kao agent
+# @name agentLogin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"agent@test.rs","password":"tajnalozinka"}
+
+
+### lista tiketa (agent — sve) — 200
+GET {{host}}/api/tickets
+Authorization: Bearer {{agentLogin.response.body.token}}

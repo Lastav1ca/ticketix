@@ -1,0 +1,49 @@
+@host = http://localhost:3000
+
+### register — 201
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{"name":"Marko","email":"agent@test.rs","password":"tajnalozinka"}
+
+### register duplikat — 409
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{"name":"Marko","email":"marko@test.rs","password":"tajnalozinka"}
+
+### register nevalidan — 400
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{"name":"X","email":"nijeemail","password":"123"}
+
+### login — 200 + token
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"marko@test.rs","password":"tajnalozinka"}
+
+### login pogresna lozinka — 401
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"marko@test.rs","password":"pogresno"}
+
+### login nepostojeci email — 401 (ista poruka)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"nema@test.rs","password":"tajnalozinka"}
+
+### me — 200
+GET {{host}}/api/auth/me
+Authorization: Bearer {{login.response.body.token}}
+
+### me bez tokena — 401
+GET {{host}}/api/auth/me
+
+### me sa smecem — 401
+GET {{host}}/api/auth/me
+Authorization: Bearer abc.def.ghi
