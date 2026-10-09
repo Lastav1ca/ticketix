@@ -24,12 +24,12 @@ export async function getTicketById(id : string){
     return result
 }
 
-export async function listAllTicketsByUser (userId : string){
+export async function getAllTicketsByUser (userId : string){
     const result = await db.select(ticketColumns).from(tickets).where(eq(tickets.createdBy, userId)).orderBy(desc(tickets.createdAt))
     return result
 }
 
-export async function listAllTickets (){
+export async function getAllTickets (){
     const result = await db.select(ticketColumns).from(tickets).orderBy(desc(tickets.createdAt))
     return result
 }
