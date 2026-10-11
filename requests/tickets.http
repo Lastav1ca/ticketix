@@ -1,0 +1,97 @@
+@host = http://localhost:3000
+
+### login kao klijent
+# @name clientLogin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"marko@test.rs","password":"tajnalozinka"}
+
+### lista tiketa (klijent — samo svoje) — 200
+GET {{host}}/api/tickets
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+### lista bez tokena — 401
+GET {{host}}/api/tickets
+
+### login kao agent
+# @name agentLogin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"agent@test.rs","password":"tajnalozinka"}
+
+
+### lista tiketa (agent — sve) — 200
+GET {{host}}/api/tickets
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### uploaduj tiket - 201
+# @name newTicket
+POST {{host}}/api/tickets
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{"title" : "New Ticket", "description" : "Need help with my pc"}
+
+
+### uploaduj tiket (bez tokena) - 401
+POST {{host}}/api/tickets
+Content-Type: application/json
+
+{"title" : "New Ticket", "description" : "Need help with my pc"}
+
+### uploaduj prazno telo — 400
+POST {{host}}/api/tickets
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{}
+
+### uploaduj tiket sa status i createdBy — 201, ali ignorisano (status ostaje "open" po defaultu - createdBy je id korisnika)
+POST {{host}}/api/tickets
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{"title":"Hakerski tiket","description":"Probam mass assignment","status":"resolved","createdBy":"00000000-0000-0000-0000-000000000000"}
+
+### agent: open -> in_progress — 200
+PATCH {{host}}/api/tickets/{{newTicket.response.body.id}}/status
+Content-Type: application/json
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+{"status":"in_progress"}
+
+### klijent menja status — 403
+PATCH {{host}}/api/tickets/{{newTicket.response.body.id}}/status
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{"status":"closed"}
+
+### prelaz u open — 409
+PATCH {{host}}/api/tickets/{{newTicket.response.body.id}}/status
+Content-Type: application/json
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+{"status":"open"}
+
+### nevalidan status — 400
+PATCH {{host}}/api/tickets/{{newTicket.response.body.id}}/status
+Content-Type: application/json
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+{"status":"nesto"}
+
+### nevalidan id — 400
+PATCH {{host}}/api/tickets/abc/status
+Content-Type: application/json
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+{"status":"closed"}
+
+### promena statusa bez tokena — 401
+PATCH {{host}}/api/tickets/abc/status
+Content-Type: application/json
+
+{"status":"closed"}
