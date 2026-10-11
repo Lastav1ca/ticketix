@@ -38,3 +38,8 @@ export async function updateTicketStatus(id : string, status : TicketStatus){
     const [result] = await db.update(tickets).set({status}).where(eq(tickets.id, id)).returning(ticketColumns)
     return result
 }
+
+export async function updateTicketAssignee(ticketId : string, assigneeId : string){
+    const [result] = await db.update(tickets).set({assignedTo : assigneeId}).where(eq(tickets.id, ticketId)).returning(ticketColumns)
+    return result
+}

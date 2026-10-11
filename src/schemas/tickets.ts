@@ -8,3 +8,5 @@ export const ticketSchema = z.object({
 
 export const ticketIdSchema = z.uuid()
 export const updateStatusSchema = z.object({ status: z.enum(ticketStatusEnum.enumValues) })
+
+export const assigneeIdSchema = z.object({ assignedTo: z.uuid() })

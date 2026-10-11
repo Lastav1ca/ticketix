@@ -1,6 +1,7 @@
-import { selectAllTicketsByUser, selectAllTickets, insertTicket, selectTicketById, updateTicketStatus } from "../db/queries/tickets.js";
+import { selectAllTicketsByUser, selectAllTickets, insertTicket, selectTicketById, updateTicketStatus, updateTicketAssignee } from "../db/queries/tickets.js";
+import { selectUserById } from "../db/queries/users.js";
 import type { Role, TicketStatus } from "../db/schema.js";
-import { ConflictError, ForbiddenError, NotFoundError} from "../errors.js";
+import { BadRequestError, ConflictError, ForbiddenError, NotFoundError} from "../errors.js";
 
 const allowed: Record<TicketStatus, TicketStatus[]> = {
     open:        ["in_progress", "closed"],
@@ -55,4 +56,19 @@ export async function changeTicketStatus(ticketId : string, status : TicketStatu
 
     return updatedTicket
 
+}
+
+export async function changeTicketAssignee(ticketId : string, assigneeId : string, role : Role){
+    if (role !== 'admin' && role !== 'agent') { throw new ForbiddenError('only agents can change who the ticket is assigned to')}
+
+    const ticket = await selectTicketById(ticketId)
+    if (!ticket) { throw new NotFoundError('ticket not found')}
+
+    const user = await selectUserById(assigneeId)
+    if (!user) { throw new NotFoundError('user doesn\'t exist')}
+    if (user.role !== 'admin' && user.role !== 'agent') {throw new BadRequestError('tickets can only be assigned to agents')}
+
+    const updatedTicket = await updateTicketAssignee(ticketId, assigneeId)
+
+    return updatedTicket
 }

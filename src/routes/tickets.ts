@@ -1,9 +1,8 @@
 import { Router, Request, Response } from "express";
-import { listTickets, createTicket, getTicketById, changeTicketStatus } from "../services/tickets.js";
+import { listTickets, createTicket, getTicketById, changeTicketStatus, changeTicketAssignee } from "../services/tickets.js";
 import { requireAuth } from "../middleware/auth.js";
-import { ticketIdSchema, ticketSchema, updateStatusSchema } from "../schemas/tickets.js";
+import { assigneeIdSchema, ticketIdSchema, ticketSchema, updateStatusSchema } from "../schemas/tickets.js";
 import {z} from "zod"
-import { ticketStatusEnum } from "../db/schema.js";
 
 export const ticketsRouter = Router();
 
@@ -51,4 +50,19 @@ ticketsRouter.patch('/:id/status', async (req : Request, res : Response) => {
 
     res.status(200).json(ticket)
 
+})
+
+ticketsRouter.patch('/:id/assign', async (req : Request, res : Response) => {
+    
+    if (!req.user) {return res.status(401).json({error : 'unauthorized'})}
+
+    const parsedId = ticketIdSchema.safeParse(req.params.id)
+    const parsedBody = assigneeIdSchema.safeParse(req.body)
+
+    if (!parsedId.success) { return res.status(400).json({error : 'Invalid ticket id'})}
+    if (!parsedBody.success) { return res.status(400).json({error : 'Invalid assignee id'})}
+
+    const ticket = await changeTicketAssignee(parsedId.data, parsedBody.data.assignedTo, req.user.role)
+
+    res.status(200).json(ticket)
 })
