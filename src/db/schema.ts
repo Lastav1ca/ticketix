@@ -37,8 +37,8 @@ export const tickets = pgTable("tickets", {
 
 export const comments = pgTable("comments", {
   id : uuid("id").primaryKey().notNull().defaultRandom(),
-  ticketId : uuid("ticket_id").notNull().references(() => tickets.id),
-  authorId : uuid("id").references(() => users.id),
+  ticketId : uuid("ticket_id").notNull().references(() => tickets.id, { onDelete : "cascade"}),
+  authorId : uuid("author_id").notNull().references(() => users.id),
   body : text("body").notNull(),
   isInternal : boolean("is_internal").notNull().default(false),
   createdAt : timestamp("created_at", {withTimezone : true}).notNull().defaultNow(),
