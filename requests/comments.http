@@ -1,0 +1,124 @@
+@host = http://localhost:3000
+
+### login klijent (Marko — vlasnik tiketa)
+# @name clientLogin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"marko@test.rs","password":"tajnalozinka"}
+
+### login drugi klijent (Jovana — tuđi nalog)
+# @name otherLogin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"jovana@test.rs","password":"tajnalozinka"}
+
+### login agent (Ana)
+# @name agentLogin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"agent@test.rs","password":"tajnalozinka"}
+
+### Marko pravi tiket (da dobijemo svež id)
+# @name newTicket
+POST {{host}}/api/tickets
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{"title":"Printer ne radi","description":"Ne mogu da štampam dokumente"}
+
+
+# ========== POST /tickets/:id/comments ==========
+
+### klijent komentariše svoj tiket — 201
+POST {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{"body":"Zaboravih da dodam — greška je E045"}
+
+### agent komentariše — 201
+POST {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+Content-Type: application/json
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+{"body":"Pogledaću danas, probajte restart u međuvremenu"}
+
+### agent ostavlja INTERNU napomenu — 201
+POST {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+Content-Type: application/json
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+{"body":"Klijent je već treći put ovog meseca, eskalirati","isInternal":true}
+
+### klijent pokušava internu napomenu — 403
+POST {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{"body":"Probam da sakrijem ovo","isInternal":true}
+
+### komentar bez tokena — 401
+POST {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+Content-Type: application/json
+
+{"body":"Anonimni komentar"}
+
+### prekratko telo — 400
+POST {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{"body":"x"}
+
+### prazno telo — 400
+POST {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{}
+
+### nevalidan id tiketa — 400
+POST {{host}}/api/tickets/abc/comments
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{"body":"Komentar na nevalidan id"}
+
+### nepostojeći tiket (validan uuid) — 404
+POST {{host}}/api/tickets/00000000-0000-0000-0000-000000000000/comments
+Content-Type: application/json
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+{"body":"Komentar na tiket koji ne postoji"}
+
+### tuđi tiket (Jovana na Markov) — 404
+POST {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+Content-Type: application/json
+Authorization: Bearer {{otherLogin.response.body.token}}
+
+{"body":"Komentarišem tuđi tiket"}
+
+
+# ========== GET /tickets/:id/comments ==========
+
+### klijent lista svoj tiket — 200, BEZ interne napomene
+GET {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+### agent lista isti tiket — 200, SA internom napomenom
+GET {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### lista bez tokena — 401
+GET {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+
+### nevalidan id — 400
+GET {{host}}/api/tickets/abc/comments
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+### tuđi tiket (Jovana) — 404
+GET {{host}}/api/tickets/{{newTicket.response.body.id}}/comments
+Authorization: Bearer {{otherLogin.response.body.token}}
