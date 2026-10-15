@@ -4,7 +4,7 @@ import { requireAuth } from "../middleware/auth.js";
 import { assigneeIdSchema, ticketIdSchema, ticketSchema, updateStatusSchema } from "../schemas/tickets.js";
 import {z} from "zod"
 import { commentSchema } from "../schemas/comments.js";
-import { createComment } from "../services/comments.js";
+import { createComment, listComments } from "../services/comments.js";
 
 export const ticketsRouter = Router();
 
@@ -82,3 +82,14 @@ ticketsRouter.post('/:id/comments', async (req : Request, res: Response) => {
     const comment = await createComment(parsedId.data, req.user.id, req.user.role, parsedComment.data.body, parsedComment.data.isInternal)
     res.status(201).json(comment)
 })
+
+ticketsRouter.get('/:id/comments', async (req : Request, res : Response) => {
+    if (!req.user) { return res.status(401).json({error : 'unauthorized'})}
+
+    const parsedId = ticketIdSchema.safeParse(req.params.id)
+    if (!parsedId.success) { return res.status(400).json({error : 'Invalid ticket id'})}
+
+
+    const comments = await listComments(parsedId.data, req.user.id, req.user.role)
+    res.status(200).json(comments)
+});
