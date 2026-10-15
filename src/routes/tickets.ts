@@ -3,6 +3,8 @@ import { listTickets, createTicket, getTicketById, changeTicketStatus, changeTic
 import { requireAuth } from "../middleware/auth.js";
 import { assigneeIdSchema, ticketIdSchema, ticketSchema, updateStatusSchema } from "../schemas/tickets.js";
 import {z} from "zod"
+import { commentSchema } from "../schemas/comments.js";
+import { createComment } from "../services/comments.js";
 
 export const ticketsRouter = Router();
 
@@ -65,4 +67,18 @@ ticketsRouter.patch('/:id/assign', async (req : Request, res : Response) => {
     const ticket = await changeTicketAssignee(parsedId.data, parsedBody.data.assignedTo, req.user.role)
 
     res.status(200).json(ticket)
+})
+
+// comments
+
+ticketsRouter.post('/:id/comments', async (req : Request, res: Response) => {
+    if (!req.user) { return res.status(401).json({error : 'unauthorized'})}
+
+    const parsedId = ticketIdSchema.safeParse(req.params.id)
+    const parsedComment = commentSchema.safeParse(req.body)
+    if (!parsedId.success) { return res.status(400).json({error : 'Invalid ticket id'})}
+    if (!parsedComment.success) { return res.status(400).json({error : 'Invalid comment body'})}
+
+    const comment = await createComment(parsedId.data, req.user.id, req.user.role, parsedComment.data.body, parsedComment.data.isInternal)
+    res.status(201).json(comment)
 })
