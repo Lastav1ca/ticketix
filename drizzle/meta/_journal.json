@@ -15,6 +15,13 @@
       "when": 1791498179007,
       "tag": "0001_fearless_titanium_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791964378429,
+      "tag": "0002_sticky_marvex",
+      "breakpoints": true
     }
   ]
 }

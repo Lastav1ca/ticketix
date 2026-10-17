@@ -1,4 +1,4 @@
-import { pgTable, timestamp, uuid, text, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, timestamp, uuid, text, pgEnum, boolean } from "drizzle-orm/pg-core";
 
 export const roleEnum = pgEnum("user_role", ["client", "agent", "admin"]);
 export type Role = typeof roleEnum.enumValues[number]
@@ -35,3 +35,15 @@ export const tickets = pgTable("tickets", {
   .$onUpdate(() => new Date())
 });
 
+export const comments = pgTable("comments", {
+  id : uuid("id").primaryKey().notNull().defaultRandom(),
+  ticketId : uuid("ticket_id").notNull().references(() => tickets.id, { onDelete : "cascade"}),
+  authorId : uuid("author_id").notNull().references(() => users.id),
+  body : text("body").notNull(),
+  isInternal : boolean("is_internal").notNull().default(false),
+  createdAt : timestamp("created_at", {withTimezone : true}).notNull().defaultNow(),
+  updatedAt : timestamp("updated_at", {withTimezone : true})
+  .notNull()
+  .defaultNow()
+  .$onUpdate(() => new Date())
+})
