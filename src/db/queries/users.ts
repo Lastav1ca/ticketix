@@ -1,6 +1,6 @@
 import {db} from '../index.js'
 import {users} from '../schema.js'
-import { eq } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 
 const userColumns = {
     id : users.id,
@@ -11,7 +11,7 @@ const userColumns = {
 }
 
 export async function insertUser(name : string, email : string, passwordHash : string){
-    const [result] = await db.insert(users).values({name, email, passwordHash}).returning({id : users.id, name : users.name, email : users.email, role : users.role});
+    const [result] = await db.insert(users).values({name, email, passwordHash}).returning(userColumns);
     return result;
 }
 
@@ -26,6 +26,6 @@ export async function selectUserById(id : string) {
 }
 
 export async function selectAllUsers(){
-    const result = await db.select(userColumns).from(users);
+    const result = await db.select(userColumns).from(users).orderBy(asc(users.email));
     return result
-    }
+}
