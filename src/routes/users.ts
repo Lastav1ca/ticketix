@@ -24,7 +24,7 @@ usersRouter.patch('/:id/role', async (req : Request, res : Response) => {
     if (!id.success) { return res.status(400).json({error : 'Invalid user id'})}
     if (!role.success) { return res.status(400).json({error : 'Invalid user role'})}
 
-    const updated = await changeUserRole(id.data, role.data.role, req.user.role)
+    const updated = await changeUserRole(id.data, role.data.role, req.user.role, req.user.id)
 
     res.status(200).json(updated)
 })
