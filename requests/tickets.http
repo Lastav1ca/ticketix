@@ -95,3 +95,66 @@ PATCH {{host}}/api/tickets/abc/status
 Content-Type: application/json
 
 {"status":"closed"}
+
+### bez filtera — 200, {data, page:1, limit:20, total}
+GET {{host}}/api/tickets
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### filter po statusu — 200, samo open (seed: 2)
+GET {{host}}/api/tickets?status=open
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### filter po prioritetu — 200, samo urgent (seed: 1)
+GET {{host}}/api/tickets?priority=urgent
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### kombinacija filtera — 200
+GET {{host}}/api/tickets?status=in_progress&priority=urgent
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### paginacija: strana 1, limit 2 — 200, data.length = 2, total = 6
+GET {{host}}/api/tickets?page=1&limit=2
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### paginacija: strana 2, limit 2 — 200, drugi tiketi, isti total
+GET {{host}}/api/tickets?page=2&limit=2
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### paginacija: strana van opsega — 200, data = []
+GET {{host}}/api/tickets?page=99&limit=20
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### klijent vidi samo svoje — 200 (seed: Marko ima 3)
+GET {{host}}/api/tickets
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+### klijent probava tudji createdBy — 200, ali SAMO SVOJE (filter se ignoriš
+GET {{host}}/api/tickets?createdBy=00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{clientLogin.response.body.token}}
+
+### nevalidan status — 400
+GET {{host}}/api/tickets?status=nesto
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### limit preko granice — 400
+GET {{host}}/api/tickets?limit=500
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### page nula — 400
+GET {{host}}/api/tickets?page=0
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### limit nije broj — 400
+GET {{host}}/api/tickets?limit=abc
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### nevalidan assignedTo uuid — 400
+GET {{host}}/api/tickets?assignedTo=abc
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### nepoznat parametar — 200, ignorisan
+GET {{host}}/api/tickets?nesto=5
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### bez tokena — 401
+GET {{host}}/api/tickets?status=open
