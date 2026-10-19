@@ -1,6 +1,6 @@
-import { selectAllTicketsByUser, selectAllTickets, insertTicket, selectTicketById, updateTicketStatus, updateTicketAssignee } from "../db/queries/tickets.js";
+import { selectTickets, insertTicket, selectTicketById, updateTicketStatus, updateTicketAssignee } from "../db/queries/tickets.js";
 import { selectUserById } from "../db/queries/users.js";
-import type { Role, TicketStatus } from "../db/schema.js";
+import type { Role, TicketPriority, TicketStatus } from "../db/schema.js";
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError} from "../errors.js";
 
 const allowed: Record<TicketStatus, TicketStatus[]> = {
@@ -10,15 +10,21 @@ const allowed: Record<TicketStatus, TicketStatus[]> = {
     closed:      [],
     }
 
-export async function listTickets(userId : string, role : Role){
+export type TicketFilters = {
+  status?: TicketStatus
+  priority?: TicketPriority
+  assignedTo?: string
+  createdBy? : string
+  page: number
+  limit: number
+}
 
-    if (role === "client"){
-        const tickets = await selectAllTicketsByUser(userId)
-        return tickets
-    }else{
-        const tickets = await selectAllTickets()
-        return tickets
-    }
+export async function listTickets(userId : string, role : Role, filters : TicketFilters){
+
+    const createdBy = role === "client" ? userId : filters.createdBy
+    const tickets = await selectTickets({...filters, createdBy})
+    return tickets
+
 }
 
 export async function createTicket(title : string, description : string, createdBy : string){

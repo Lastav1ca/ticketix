@@ -1,6 +1,7 @@
+import { TicketFilters } from "../../services/tickets.js"
 import { db } from "../index.js"
-import { tickets, TicketStatus } from "../schema.js"
-import { desc, eq } from "drizzle-orm"
+import { Role, tickets, TicketStatus } from "../schema.js"
+import { and, count, desc, eq } from "drizzle-orm"
 
 const ticketColumns = {
         id : tickets.id,
@@ -24,15 +25,37 @@ export async function selectTicketById(id : string){
     return result
 }
 
-export async function selectAllTicketsByUser (userId : string){
-    const result = await db.select(ticketColumns).from(tickets).where(eq(tickets.createdBy, userId)).orderBy(desc(tickets.createdAt))
-    return result
+function buildConditions(filters: TicketFilters) {
+  const conditions = []
+  if (filters.createdBy) conditions.push(eq(tickets.createdBy, filters.createdBy))
+  if (filters.status) conditions.push(eq(tickets.status, filters.status))
+  if (filters.priority) conditions.push(eq(tickets.priority, filters.priority))
+  if (filters.assignedTo) conditions.push(eq(tickets.assignedTo, filters.assignedTo))
+  return conditions
 }
 
-export async function selectAllTickets (){
-    const result = await db.select(ticketColumns).from(tickets).orderBy(desc(tickets.createdAt))
-    return result
+export async function selectTickets (filters : TicketFilters){
+    const conditions = buildConditions(filters)
+
+    const result = await db.select(ticketColumns).from(tickets)
+    .where(and(...conditions))
+    .orderBy(desc(tickets.createdAt))
+    .limit(filters.limit)
+    .offset((filters.page - 1) * filters.limit)
+
+    const ticketCount = await countTickets(filters)
+
+    return {data : result, page : filters.page, limit : filters.limit, total : ticketCount}
 }
+
+export async function countTickets (filters : TicketFilters){
+    const conditions = buildConditions(filters)
+
+    const [row] = await db.select({ total: count() }).from(tickets).where(and(...conditions))
+
+    return row.total
+}
+
 
 export async function updateTicketStatus(id : string, status : TicketStatus){
     const [result] = await db.update(tickets).set({status}).where(eq(tickets.id, id)).returning(ticketColumns)
