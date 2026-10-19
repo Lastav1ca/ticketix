@@ -24,6 +24,7 @@ export type TicketFilters = {
   createdBy? : string
   page: number
   limit: number
+  overdue? : boolean
 }
 
 function getDeadlineDate(priority : TicketPriority) : Date{
@@ -70,7 +71,14 @@ export async function changeTicketStatus(ticketId : string, status : TicketStatu
 
     if (!allowed[ticket.status].includes(status)) { throw new ConflictError(`cannot change status from ${ticket.status} to ${status}`)}
 
-    const updatedTicket = await updateTicketStatus(ticketId, status)
+    let resolvedAt = ticket.resolvedAt
+    if (status === 'resolved'){
+        resolvedAt = new Date()
+    }else if (status === 'in_progress'){
+        resolvedAt = null
+    }
+
+    const updatedTicket = await updateTicketStatus(ticketId, status, resolvedAt)
 
     return updatedTicket
 
