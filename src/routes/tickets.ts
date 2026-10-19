@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { listTickets, createTicket, getTicketById, changeTicketStatus, changeTicketAssignee } from "../services/tickets.js";
 import { requireAuth } from "../middleware/auth.js";
-import { assigneeIdSchema, ticketIdSchema, ticketSchema, updateStatusSchema } from "../schemas/tickets.js";
+import { assigneeIdSchema, ticketIdSchema, ticketQuerySchema, ticketSchema, updateStatusSchema } from "../schemas/tickets.js";
 import {z} from "zod"
 import { commentSchema } from "../schemas/comments.js";
 import { createComment, listComments } from "../services/comments.js";
@@ -12,7 +12,12 @@ ticketsRouter.use(requireAuth)
 
 ticketsRouter.get('/', async (req : Request, res : Response) => {
     if (!req.user) {return res.status(401).json({error : 'Unauthorized!'})}
-    const tickets = await listTickets(req.user.id, req.user.role)
+
+    const filters = ticketQuerySchema.safeParse(req.query)
+
+    if (!filters.success) {return res.status(400).json({"error" : "validation failed", "issues" : filters.error.issues})}
+
+    const tickets = await listTickets(req.user.id, req.user.role, filters.data)
 
     return res.status(200).json(tickets)
 })
