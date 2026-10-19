@@ -1,6 +1,6 @@
 import { TicketFilters } from "../../services/tickets.js"
 import { db } from "../index.js"
-import { Role, tickets, TicketStatus } from "../schema.js"
+import { TicketPriority, tickets, TicketStatus } from "../schema.js"
 import { and, count, desc, eq } from "drizzle-orm"
 
 const ticketColumns = {
@@ -9,14 +9,16 @@ const ticketColumns = {
         description : tickets.description,
         status : tickets.status,
         priority : tickets.priority,
+        dueAt : tickets.dueAt,
+        resolvedAt : tickets.resolvedAt,
         createdBy : tickets.createdBy,
         assignedTo : tickets.assignedTo,
         createdAt : tickets.createdAt,
         updatedAt : tickets.updatedAt,
     }
 
-export async function insertTicket(title : string, description : string, createdBy : string){
-    const [result] = await db.insert(tickets).values({title, description, createdBy}).returning(ticketColumns)
+export async function insertTicket(title : string, description : string, createdBy : string, priority : TicketPriority, dueAt : Date){
+    const [result] = await db.insert(tickets).values({title, description, createdBy, priority, dueAt}).returning(ticketColumns)
     return result;
 }
 

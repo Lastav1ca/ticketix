@@ -3,7 +3,8 @@ import { ticketPriorityEnum, ticketStatusEnum } from "../db/schema.js"
 
 export const ticketSchema = z.object({
     title : z.string().min(3).max(200),
-    description : z.string().min(3).max(1000)
+    description : z.string().min(3).max(1000),
+    priority : z.enum(ticketPriorityEnum.enumValues).default("medium")
 })
 
 export const ticketIdSchema = z.uuid()

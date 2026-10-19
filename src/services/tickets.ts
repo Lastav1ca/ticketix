@@ -3,6 +3,13 @@ import { selectUserById } from "../db/queries/users.js";
 import type { Role, TicketPriority, TicketStatus } from "../db/schema.js";
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError} from "../errors.js";
 
+const priorityDeadlines : Record<TicketPriority, number> = { //hours
+    low : 72,
+    medium : 24,
+    high : 8,
+    urgent : 4
+}
+
 const allowed: Record<TicketStatus, TicketStatus[]> = {
     open:        ["in_progress", "closed"],
     in_progress: ["resolved", "closed"],
@@ -19,6 +26,10 @@ export type TicketFilters = {
   limit: number
 }
 
+function getDeadlineDate(priority : TicketPriority) : Date{
+    return new Date(Date.now() + priorityDeadlines[priority] * 60 * 60 * 1000)
+}
+
 export async function listTickets(userId : string, role : Role, filters : TicketFilters){
 
     const createdBy = role === "client" ? userId : filters.createdBy
@@ -27,9 +38,10 @@ export async function listTickets(userId : string, role : Role, filters : Ticket
 
 }
 
-export async function createTicket(title : string, description : string, createdBy : string){
+export async function createTicket(title : string, description : string, createdBy : string, priority : TicketPriority){
     
-    const ticket = await insertTicket(title, description, createdBy)
+    const dueAt = getDeadlineDate(priority)
+    const ticket = await insertTicket(title, description, createdBy, priority, dueAt)
     return ticket
 
 }
@@ -78,3 +90,4 @@ export async function changeTicketAssignee(ticketId : string, assigneeId : strin
 
     return updatedTicket
 }
+
