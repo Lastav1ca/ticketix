@@ -1,6 +1,6 @@
-import { selectAllUsers } from "../db/queries/users.js";
+import { selectAllUsers, selectUserById, updateUserRole } from "../db/queries/users.js";
 import { Role } from "../db/schema.js";
-import { ForbiddenError } from "../errors.js";
+import { ForbiddenError, NotFoundError } from "../errors.js";
 
 export async function listUsers(role : Role){
     if (role !== 'admin'){
@@ -9,4 +9,16 @@ export async function listUsers(role : Role){
 
     const users = await selectAllUsers()
     return users
+}
+
+export async function changeUserRole (userId : string, newRole : Role, functionCallerRole : Role){
+    
+    if (functionCallerRole !== 'admin') { throw new ForbiddenError('only admins can change user roles')}
+    
+    const user = await selectUserById(userId)
+    if (!user) { throw new NotFoundError('user doesnt exist')}
+
+    const updated = await updateUserRole(userId, newRole)
+
+    return updated
 }

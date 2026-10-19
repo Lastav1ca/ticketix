@@ -1,5 +1,5 @@
 import {db} from '../index.js'
-import {users} from '../schema.js'
+import {Role, users} from '../schema.js'
 import { eq, asc } from 'drizzle-orm';
 
 const userColumns = {
@@ -27,5 +27,10 @@ export async function selectUserById(id : string) {
 
 export async function selectAllUsers(){
     const result = await db.select(userColumns).from(users).orderBy(asc(users.email));
+    return result
+}
+
+export async function updateUserRole(id : string, role : Role){
+    const [result] = await db.update(users).set({role}).where(eq(users.id, id)).returning(userColumns)
     return result
 }
