@@ -26,6 +26,8 @@ export const tickets = pgTable("tickets", {
   description : text("description").notNull(),
   status : ticketStatusEnum("status").notNull().default("open"),
   priority : ticketPriorityEnum("priority").notNull().default("medium"),
+  dueAt : timestamp("due_at", {withTimezone : true}),
+  resolvedAt : timestamp("resolved_at", {withTimezone : true}),
   createdBy : uuid("created_by").notNull().references(() => users.id),
   assignedTo : uuid("assigned_to").references(() => users.id, {onDelete : "set null"}), // can be null while ticket isnt assigned
   createdAt : timestamp("created_at", {withTimezone : true}).notNull().defaultNow(),

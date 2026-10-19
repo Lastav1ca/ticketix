@@ -15,7 +15,9 @@ type SeedTicket = {
     status : TicketStatus,
     priority : TicketPriority,
     createdByEmail : string,
-    assignedToEmail? : string
+    assignedToEmail? : string,
+    dueInHours? : number,
+    resolvedHoursAgo? : number
 }
 
 export async function seedUsers(userRows : SeedUser[]){
@@ -36,13 +38,21 @@ export async function seedUsers(userRows : SeedUser[]){
 export async function seedTickets(ticketRows : SeedTicket[], emailId : Record<string, string>){
     for (const ticket of ticketRows){
         const createdById = emailId[ticket.createdByEmail]
+        const dueAt = ticket.dueInHours !== undefined
+        ? new Date(Date.now() + ticket.dueInHours * 60 * 60 * 1000)
+        : null
+        const resolvedAt = ticket.resolvedHoursAgo !== undefined
+        ? new Date(Date.now() - ticket.resolvedHoursAgo * 60 * 60 * 1000)
+        : null
         await db.insert(tickets).values({
             title : ticket.title, 
             description : ticket.description, 
             status : ticket.status, 
             priority : ticket.priority, 
             createdBy : createdById, 
-            assignedTo : ticket.assignedToEmail ? emailId[ticket.assignedToEmail] : null})
+            assignedTo : ticket.assignedToEmail ? emailId[ticket.assignedToEmail] : null,
+            dueAt : dueAt,
+            resolvedAt : resolvedAt})
     }
 }
 
@@ -60,22 +70,22 @@ async function main(){
 
     await seedTickets([
   { title: "Ne mogu da se ulogujem", description: "Posle promene lozinke prijava vraća grešku 401.",
-    status: "open", priority: "high", createdByEmail: "marko@test.rs" },
+    status: "open", priority: "high", createdByEmail: "marko@test.rs", dueInHours : 2},
 
   { title: "Štampač ne radi", description: "Mrežni štampač u kancelariji 2 ne prihvata zadatke.",
-    status: "open", priority: "low", createdByEmail: "marko@test.rs" },
+    status: "open", priority: "low", createdByEmail: "marko@test.rs", dueInHours : 28},
 
   { title: "Aplikacija se zamrzava", description: "Pri otvaranju izveštaja aplikacija prestaje da reaguje.",
-    status: "in_progress", priority: "urgent", createdByEmail: "jovana@test.rs", assignedToEmail: "agent@test.rs" },
+    status: "in_progress", priority: "urgent", createdByEmail: "jovana@test.rs", assignedToEmail: "agent@test.rs", dueInHours : -2 },
 
   { title: "Zahtev za novi nalog", description: "Potreban nalog za novog kolegu iz računovodstva.",
-    status: "in_progress", priority: "medium", createdByEmail: "jovana@test.rs", assignedToEmail: "agent2@test.rs" },
+    status: "in_progress", priority: "medium", createdByEmail: "jovana@test.rs", assignedToEmail: "agent2@test.rs", dueInHours : 5},
 
   { title: "Email ne stiže", description: "Poruke sa eksternih adresa ne dolaze od juče.",
-    status: "resolved", priority: "high", createdByEmail: "marko@test.rs", assignedToEmail: "agent@test.rs" },
+    status: "resolved", priority: "high", createdByEmail: "marko@test.rs", assignedToEmail: "agent@test.rs", dueInHours : -5, resolvedHoursAgo : 6},
 
   { title: "Pogrešan datum u izveštaju", description: "Mesečni izveštaj prikazuje prošli mesec.",
-    status: "closed", priority: "low", createdByEmail: "jovana@test.rs", assignedToEmail: "agent@test.rs" },
+    status: "closed", priority: "low", createdByEmail: "jovana@test.rs", assignedToEmail: "agent@test.rs", dueInHours : -10, resolvedHoursAgo : 2},
     ], emailId)
 
     console.log("seeding done")

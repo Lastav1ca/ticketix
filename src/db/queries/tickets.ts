@@ -1,7 +1,7 @@
 import { TicketFilters } from "../../services/tickets.js"
 import { db } from "../index.js"
-import { Role, tickets, TicketStatus } from "../schema.js"
-import { and, count, desc, eq } from "drizzle-orm"
+import { TicketPriority, tickets, TicketStatus } from "../schema.js"
+import { and, count, desc, eq, lt, notInArray } from "drizzle-orm"
 
 const ticketColumns = {
         id : tickets.id,
@@ -9,14 +9,16 @@ const ticketColumns = {
         description : tickets.description,
         status : tickets.status,
         priority : tickets.priority,
+        dueAt : tickets.dueAt,
+        resolvedAt : tickets.resolvedAt,
         createdBy : tickets.createdBy,
         assignedTo : tickets.assignedTo,
         createdAt : tickets.createdAt,
         updatedAt : tickets.updatedAt,
     }
 
-export async function insertTicket(title : string, description : string, createdBy : string){
-    const [result] = await db.insert(tickets).values({title, description, createdBy}).returning(ticketColumns)
+export async function insertTicket(title : string, description : string, createdBy : string, priority : TicketPriority, dueAt : Date){
+    const [result] = await db.insert(tickets).values({title, description, createdBy, priority, dueAt}).returning(ticketColumns)
     return result;
 }
 
@@ -31,6 +33,7 @@ function buildConditions(filters: TicketFilters) {
   if (filters.status) conditions.push(eq(tickets.status, filters.status))
   if (filters.priority) conditions.push(eq(tickets.priority, filters.priority))
   if (filters.assignedTo) conditions.push(eq(tickets.assignedTo, filters.assignedTo))
+  if (filters.overdue) conditions.push(lt(tickets.dueAt, new Date()), notInArray(tickets.status, ["resolved","closed"]))
   return conditions
 }
 
@@ -57,8 +60,8 @@ export async function countTickets (filters : TicketFilters){
 }
 
 
-export async function updateTicketStatus(id : string, status : TicketStatus){
-    const [result] = await db.update(tickets).set({status}).where(eq(tickets.id, id)).returning(ticketColumns)
+export async function updateTicketStatus(id : string, status : TicketStatus, resolvedAt : Date | null){
+    const [result] = await db.update(tickets).set({status, resolvedAt}).where(eq(tickets.id, id)).returning(ticketColumns)
     return result
 }
 

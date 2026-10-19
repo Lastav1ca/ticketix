@@ -28,7 +28,7 @@ ticketsRouter.post('/', async (req : Request, res : Response) => {
     const result = ticketSchema.safeParse(req.body)
     if (!result.success) { return res.status(400).json({"error" : "validation failed", "issues" : result.error.issues})}
 
-    const ticket = await createTicket(result.data.title, result.data.description, req.user.id)
+    const ticket = await createTicket(result.data.title, result.data.description, req.user.id, result.data.priority)
     res.status(201).json(ticket)
 })
 
