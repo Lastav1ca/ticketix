@@ -1,0 +1,45 @@
+@host = http://localhost:3000
+
+### admin login - 200
+# @name adminLogin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"admin@test.rs", "password":"tajnalozinka"}
+
+### login kao agent
+# @name agentLogin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{"email":"agent@test.rs","password":"tajnalozinka"}
+
+### lista korisnika - 200 (admin)
+# @name allUsers
+GET {{host}}/api/users
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+### lista korisnika - 403 (agent)
+GET {{host}}/api/users
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+### admin menja rolu — 200
+PATCH {{host}}/api/users/{{allUsers.response.body.$[3].id}}/role
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{"role":"agent"}
+
+### agent menja rolu — 403
+PATCH {{host}}/api/users/{{allUsers.response.body.$[3].id}}/role
+Content-Type: application/json
+Authorization: Bearer {{agentLogin.response.body.token}}
+
+{"role":"agent"}
+
+### admin menja svoju rolu — 403
+PATCH {{host}}/api/users/{{allUsers.response.body.$[0].id}}/role
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{"role":"agent"}
