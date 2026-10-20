@@ -6,7 +6,7 @@ import { config } from "../config.js";
 
 const dbUrl = config.dbUrl
 
-const pool = new Pool({
+export const pool = new Pool({
     connectionString : dbUrl
 })
 

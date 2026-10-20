@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
 
 try{
-    process.loadEnvFile(".env")
+    process.loadEnvFile(process.env.NODE_ENV === "test" ? ".env.test" : ".env")
 }catch (err){
     // .env not in prod
     if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
