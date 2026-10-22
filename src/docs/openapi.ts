@@ -105,8 +105,8 @@ export const openapiSpec = {
               type: "object",
               required: ["email", "password"],
               properties: {
-                email: { type: "string", format: "email" },
-                password: { type: "string" }
+                email: { type: "string", format: "email", example: "agent@test.rs" },
+                password: { type: "string", example: "tajnalozinka" }
               }
             }
           }
@@ -224,8 +224,8 @@ export const openapiSpec = {
               type: "object",
               required: ["title", "description"],
               properties: {
-                title: { type: "string", minLength: 3, maxLength: 200 },
-                description: { type: "string", minLength: 3, maxLength: 1000 },
+                title: { type: "string", minLength: 3, maxLength: 200, example: "Server nedostupan" },
+                description: { type: "string", minLength: 3, maxLength: 1000, example: "Produkcija ne odgovara od 9h." },
                 priority: { type: "string", enum: ["low", "medium", "high", "urgent"], default: "medium" }
               }
             }
@@ -363,7 +363,7 @@ export const openapiSpec = {
               type: "object",
               required: ["body"],
               properties: {
-                body: { type: "string", minLength: 3, maxLength: 2000 },
+                body: { type: "string", minLength: 3, maxLength: 2000, example: "Proverili smo logove, restart je u toku." },
                 isInternal: { type: "boolean", default: false }
               }
             }
