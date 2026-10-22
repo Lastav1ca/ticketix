@@ -5,11 +5,22 @@ A learning project built to practice a full backend stack.
 
 ![CI](https://github.com/Lastav1ca/ticketix/actions/workflows/ci.yml/badge.svg)
 
+**Live:** https://ticketix.onrender.com — try `GET /healthz`, then log in.
+
+Demo accounts (password `tajnalozinka`): `admin@test.rs`, `agent@test.rs`, `marko@test.rs`.
+The first request after a while takes ~50s — Render spins free instances down when idle.
+
+```bash
+curl -X POST https://ticketix.onrender.com/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"agent@test.rs","password":"tajnalozinka"}'
+```
+
 ## Stack
 
 Node.js + TypeScript, Express, PostgreSQL with Drizzle, Zod for validation,
 JWT + argon2 for auth, Vitest for tests, Docker Compose for the local database,
-GitHub Actions for CI.
+GitHub Actions for CI, Docker + Render for deployment.
 
 ## Structure
 
@@ -115,3 +126,19 @@ npm test
 
 52 integration tests over real HTTP requests and a real database. Migrations run automatically
 before the suite. GitHub Actions runs them, plus `tsc --noEmit`, on every pull request.
+
+## Deployment
+
+The `Dockerfile` is multi-stage: the first stage installs everything and runs `tsc`, the second
+installs only production dependencies and copies `dist/` plus the `drizzle/` migration files.
+On startup the container runs the migrations and then the server:
+
+```dockerfile
+CMD ["sh", "-c", "node dist/db/migrate.js && exec node dist/index.js"]
+```
+
+Migrations use `drizzle-orm`'s migrator (`src/db/migrate.ts`) rather than `drizzle-kit`, which is
+a dev dependency and isn't installed in the production image.
+
+Render builds this image from `main` and injects `DATABASE_URL`, `JWT_SECRET`,
+`JWT_SECRET_EXPIRES_IN` and `PORT`. Nothing is read from a `.env` file in production.
