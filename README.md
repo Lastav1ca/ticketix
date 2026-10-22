@@ -5,7 +5,7 @@ A learning project built to practice a full backend stack.
 
 ![CI](https://github.com/Lastav1ca/ticketix/actions/workflows/ci.yml/badge.svg)
 
-**Live:** https://ticketix.onrender.com — try `GET /healthz`, then log in.
+**Live:** https://ticketix.onrender.com — opens the interactive API docs.
 
 Demo accounts (password `tajnalozinka`): `admin@test.rs`, `agent@test.rs`, `marko@test.rs`.
 The first request after a while takes ~50s — Render spins free instances down when idle.
@@ -21,6 +21,7 @@ curl -X POST https://ticketix.onrender.com/api/auth/login \
 Node.js + TypeScript, Express, PostgreSQL with Drizzle, Zod for validation,
 JWT + argon2 for auth, Vitest for tests, Docker Compose for the local database,
 GitHub Actions for CI, Docker + Render for deployment.
+Swagger UI for documentation and testing
 
 ## Structure
 
@@ -69,8 +70,8 @@ Seeded users (password `tajnalozinka`): `admin@test.rs`, `agent@test.rs`, `agent
 | PATCH | `/api/users/:id/role` | admin |
 
 Filters on `GET /api/tickets`: `status`, `priority`, `assignedTo`, `createdBy`, `overdue`,
-plus `page` (default 1) and `limit` (default 20, max 100). Response is
-`{ data, page, limit, total }`. Clients can't use `createdBy` to read other people's tickets —
+plus `page` (default 1) and `limit` (default 20, max 100).
+Clients can't use `createdBy` to read other people's tickets —
 the service overrides it with their own id.
 
 ## Database
@@ -103,16 +104,8 @@ Anything else returns 409.
 
 This is a resolution SLA (time until the ticket is resolved, not until the first reply).
 `resolvedAt` is set when the status becomes `resolved` and cleared if the ticket is re-opened.
-Closing an already resolved ticket keeps the original `resolvedAt`.
 
 `GET /api/tickets?overdue=true` returns tickets past their deadline that aren't resolved.
-
-## Notes
-
-- Wrong email and wrong password both return 401, so you can't tell which emails are registered.
-- A client asking for someone else's ticket gets 404 instead of 403 — 403 would confirm it exists.
-- `role`, `status`, `createdBy`, `dueAt` and `resolvedAt` are never taken from the request body.
-- The JWT holds the user's role, so a role change only applies after the next login.
 
 ## Tests
 
@@ -120,12 +113,9 @@ The tests delete rows, so they use a separate database:
 
 ```bash
 docker compose exec db createdb -U ticketix_app ticketix_test
-cp .env.test.example .env.test     # DATABASE_URL points at ticketix_test
+cp .env.test.example .env.test 
 npm test
 ```
-
-52 integration tests over real HTTP requests and a real database. Migrations run automatically
-before the suite. GitHub Actions runs them, plus `tsc --noEmit`, on every pull request.
 
 ## Deployment
 
@@ -137,8 +127,7 @@ On startup the container runs the migrations and then the server:
 CMD ["sh", "-c", "node dist/db/migrate.js && exec node dist/index.js"]
 ```
 
-Migrations use `drizzle-orm`'s migrator (`src/db/migrate.ts`) rather than `drizzle-kit`, which is
-a dev dependency and isn't installed in the production image.
+Migrations use `drizzle-orm`'s migrator (`src/db/migrate.ts`).
 
 Render builds this image from `main` and injects `DATABASE_URL`, `JWT_SECRET`,
-`JWT_SECRET_EXPIRES_IN` and `PORT`. Nothing is read from a `.env` file in production.
+`JWT_SECRET_EXPIRES_IN` and `PORT`. Postgres is hosted on Neon.
